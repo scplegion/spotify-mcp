@@ -102,3 +102,42 @@ export async function checkPlaylistPermissions(playlistId: string): Promise<{
     canModify
   }
 }
+
+/**
+ * Gets subscription information for the current user
+ */
+export async function getSubscriptionInfo(): Promise<{
+  subscriptionType: string
+  isPremium: boolean
+  isFree: boolean
+  isFamily: boolean
+  isStudent: boolean
+  canPlayback: boolean
+  canOfflineSync: boolean
+  maxBitrate: string
+}> {
+  const spotifyClient = getDefaultSpotifyClient()
+  const me = await spotifyClient.getMe()
+  
+  const subscriptionType = me.body.product?.toLowerCase() || 'unknown'
+  const isPremium = subscriptionType === 'premium'
+  const isFree = subscriptionType === 'free'
+  const isFamily = subscriptionType === 'family'
+  const isStudent = subscriptionType === 'student'
+  
+  // Determine capabilities based on subscription type
+  const canPlayback = isPremium || isFamily || isStudent
+  const canOfflineSync = isPremium || isFamily || isStudent
+  const maxBitrate = isPremium || isFamily || isStudent ? '320kbps' : '160kbps'
+  
+  return {
+    subscriptionType,
+    isPremium,
+    isFree,
+    isFamily,
+    isStudent,
+    canPlayback,
+    canOfflineSync,
+    maxBitrate
+  }
+}
