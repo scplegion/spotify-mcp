@@ -4,11 +4,21 @@ import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import { generateRandomString } from '../utils/random.js'
 import open from 'open'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
 /**
  * Spotify API client instance
  */
 let spotifyClient: SpotifyWebApi | null = null
+
+/**
+ * Path to persisted token cache. Survives MCP server restarts so users
+ * don't need to re-authorize on every new chat.
+ */
+const TOKEN_CACHE_DIR = path.join(os.homedir(), '.spotify-mcp')
+const TOKEN_CACHE_FILE = path.join(TOKEN_CACHE_DIR, 'tokens.json')
 
 /**
  * In-memory token storage for OAuth flow
@@ -18,6 +28,48 @@ let tokenStorage: {
   refreshToken?: string
   expiresAt?: number
 } = {}
+
+let tokensLoadedFromDisk = false
+
+/**
+ * Loads persisted tokens from disk into in-memory storage (once per process).
+ */
+function loadTokensFromDisk(): void {
+  if (tokensLoadedFromDisk) return
+  tokensLoadedFromDisk = true
+  try {
+    if (!fs.existsSync(TOKEN_CACHE_FILE)) return
+    const raw = fs.readFileSync(TOKEN_CACHE_FILE, 'utf8')
+    const parsed = JSON.parse(raw) as typeof tokenStorage
+    if (parsed && typeof parsed === 'object') {
+      tokenStorage = {
+        accessToken: parsed.accessToken,
+        refreshToken: parsed.refreshToken,
+        expiresAt: parsed.expiresAt,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load cached Spotify tokens:', error)
+  }
+}
+
+/**
+ * Persists current in-memory tokens to disk with restrictive permissions.
+ */
+function saveTokensToDisk(): void {
+  try {
+    if (!fs.existsSync(TOKEN_CACHE_DIR)) {
+      fs.mkdirSync(TOKEN_CACHE_DIR, { recursive: true, mode: 0o700 })
+    }
+    fs.writeFileSync(
+      TOKEN_CACHE_FILE,
+      JSON.stringify(tokenStorage, null, 2),
+      { mode: 0o600 },
+    )
+  } catch (error) {
+    console.error('Failed to persist Spotify tokens:', error)
+  }
+}
 
 /**
  * OAuth callback server
@@ -37,6 +89,10 @@ export function getDefaultSpotifyClient(): SpotifyWebApi {
   if (spotifyClient) {
     return spotifyClient
   }
+
+  // Hydrate tokenStorage from disk before constructing the client so
+  // a freshly spawned MCP process can reuse previously issued tokens.
+  loadTokensFromDisk()
 
   // Create new Spotify client with configuration
   spotifyClient = new SpotifyWebApi({
@@ -207,6 +263,7 @@ function startCallbackServer(expectedState: string): Promise<void> {
         tokenStorage.accessToken = tokens.access_token
         tokenStorage.refreshToken = tokens.refresh_token
         tokenStorage.expiresAt = Date.now() + (tokens.expires_in * 1000)
+        saveTokensToDisk()
 
         // Update client with new tokens
         const client = getDefaultSpotifyClient()
@@ -318,7 +375,9 @@ export async function refreshSpotifyToken(): Promise<void> {
       tokenStorage.refreshToken = data.body.refresh_token
       client.setRefreshToken(data.body.refresh_token)
     }
-    
+
+    saveTokensToDisk()
+
     console.log('Successfully refreshed Spotify access token')
   } catch (error) {
     console.error('Failed to refresh Spotify access token:', error)
