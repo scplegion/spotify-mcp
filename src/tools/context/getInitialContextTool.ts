@@ -74,11 +74,28 @@ The authorization server is now running and waiting for your response.`)
   try {
     // Get current user info for context
     const me = await spotifyClient.getMe()
+    
+    // Determine subscription type and capabilities
+    const subscriptionType = me.body.product?.toLowerCase() || 'unknown'
+    const isPremium = subscriptionType === 'premium'
+    const isFree = subscriptionType === 'free'
+    
+    // Build subscription info with capability details
+    let subscriptionInfo = subscriptionType
+    if (isPremium) {
+      subscriptionInfo += ' (Full playback and offline access available)'
+    } else if (isFree) {
+      subscriptionInfo += ' (Limited playback, ads included)'
+    } else if (subscriptionType !== 'unknown') {
+      subscriptionInfo += ` (${subscriptionType} features available)`
+    }
+    
     userInfo = `Current Spotify User:
   - Display Name: ${me.body.display_name || 'Not available'}
   - User ID: ${me.body.id}
   - Country: ${me.body.country || 'Not specified'}
-  - Subscription: ${me.body.product || 'Not specified'}
+  - Subscription: ${subscriptionInfo}
+  - Premium: ${isPremium ? 'Yes' : 'No'}
   - Followers: ${me.body.followers?.total || 0}`
 
     // Get available markets (for performance, limit to first 10)

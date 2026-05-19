@@ -13,10 +13,11 @@ The **Spotify MCP Server** implements the [Model Context Protocol](https://model
 - **📚 User Library Access**: Access and modify your saved tracks, albums, and shows
 - **🎯 Personalized Recommendations**: Get music suggestions based on your taste
 - **📊 Audio Analysis**: Retrieve audio features (danceability, energy, tempo, etc.) for tracks
-- **🎧 Playback Control**: (Premium only) Play, pause, skip, and control playback devices
+- **🎧 Playback Control**: (Premium and paid subscriptions) Play, pause, skip, and control playback devices
 - **📈 User Insights**: View your top tracks, artists, and listening history
 - **🔄 Queue Management**: Add tracks to your queue and view upcoming songs
 - **📱 Device Management**: Transfer playback between devices
+- **✅ Multi-Subscription Support**: Full support for Premium, Free, Family, and Student accounts
 
 ---
 
@@ -24,7 +25,7 @@ The **Spotify MCP Server** implements the [Model Context Protocol](https://model
 
 ### Prerequisites
 
-- A Spotify account (Premium required for playback control)
+- A Spotify account (any subscription type supported: Premium, Free, Family, Student)
 - Spotify API credentials (see below)
 - Node.js 18 or newer
 
@@ -230,9 +231,9 @@ Get the current user's top artists or tracks based on calculated affinity.
 
 ---
 
-### 🎧 Playback Control (Premium Only)
+### 🎧 Playback Control (Premium and Paid Subscriptions)
 
-*Note: These tools require a Spotify Premium account*
+*Note: These tools work with Premium, Family, and Student accounts. Free tier users have limited playback capabilities (shuffle-only mode).*
 
 #### `get_current_playback`
 Get current playing track and device information.
