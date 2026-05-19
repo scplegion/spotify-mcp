@@ -74,12 +74,12 @@ The authorization server is now running and waiting for your response.`)
   try {
     // Get current user info for context
     const me = await spotifyClient.getMe()
-    
+
     // Determine subscription type and capabilities
     const subscriptionType = me.body.product?.toLowerCase() || 'unknown'
     const isPremium = subscriptionType === 'premium'
     const isFree = subscriptionType === 'free'
-    
+
     // Build subscription info with capability details
     let subscriptionInfo = subscriptionType
     if (isPremium) {
@@ -89,7 +89,7 @@ The authorization server is now running and waiting for your response.`)
     } else if (subscriptionType !== 'unknown') {
       subscriptionInfo += ` (${subscriptionType} features available)`
     }
-    
+
     userInfo = `Current Spotify User:
   - Display Name: ${me.body.display_name || 'Not available'}
   - User ID: ${me.body.id}
@@ -97,13 +97,18 @@ The authorization server is now running and waiting for your response.`)
   - Subscription: ${subscriptionInfo}
   - Premium: ${isPremium ? 'Yes' : 'No'}
   - Followers: ${me.body.followers?.total || 0}`
+  } catch (error) {
+    console.error('Could not fetch user profile:', error)
+    userInfo = 'User information not available'
+  }
 
-    // Get available markets (for performance, limit to first 10)
+  try {
+    // Get available genre seeds (best-effort; Spotify deprecated this endpoint
+    // for newer client IDs and may return 404)
     const markets = await spotifyClient.getAvailableGenreSeeds()
     availableMarkets = `Available Genre Seeds (sample): ${markets.body.genres.slice(0, 10).join(', ')}`
   } catch (error) {
-    console.warn('Could not fetch additional user context:', error)
-    userInfo = 'User information not available'
+    console.error('Could not fetch genre seeds:', error)
     availableMarkets = 'Market information not available'
   }
 

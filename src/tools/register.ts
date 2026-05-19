@@ -5,6 +5,7 @@ import {registerContextTools} from './context/register.js'
 import {registerPlaylistsTools} from './playlists/register.js'
 import {registerBrowseTools} from './browse/register.js'
 import {registerPersonalizationTools} from './personalization/register.js'
+import {registerPlaybackTools} from './playback/register.js'
 import type {ServerNotification, ServerRequest} from '@modelcontextprotocol/sdk/types.js'
 
 // Define a generic type for functions
@@ -44,6 +45,7 @@ function registerSpotifyTools(server: McpServer) {
   registerPlaylistsTools(wrappedServer)
   registerBrowseTools(wrappedServer)
   registerPersonalizationTools(wrappedServer)
+  registerPlaybackTools(wrappedServer)
 }
 
 export function registerAllTools(server: McpServer) {

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const SpotifyWebApi = require\\(''spotify-web-api-node''\\); const api = new SpotifyWebApi\\(\\); const methods = Object.getOwnPropertyNames\\(SpotifyWebApi.prototype\\).filter\\(m => /play|pause|skip|queue|device|volume|seek|repeat|shuffle|current/i.test\\(m\\)\\); console.log\\(methods.join\\(''\\\\n''\\)\\);\")",
+      "Bash(npm run:*)"
+    ]
+  }
+}
